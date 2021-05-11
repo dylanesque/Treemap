@@ -18,6 +18,7 @@ async function drawTree() {
     });
 
   const movies = movieHierarchy.leaves();
+  console.log(movies);
 
   // 2. Create chart dimensions
 
@@ -53,7 +54,59 @@ async function drawTree() {
       `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`
     );
 
-  const tree = bounds.selectAll('g').data(movies).enter().append('g');
+  const tree = bounds
+    .selectAll('g')
+    .data(movies)
+    .enter()
+    .append('g')
+    .append('rect')
+    .attr('class', 'tile')
+    .attr('fill', (movie) => mapGenreToColor(movie))
+    .attr('data-name', (movie) => movie.data.name)
+    .attr('data-category', (movie) => movie.data.category)
+    .attr('data-value', (movie) => movie.data.value);
+  
+  function mapGenreToColor(movie) {
+    const genre = movie.data.category;
+    if (genre == 'Action') {
+      return 'red';
+    } else if (genre == 'Drama') {
+      return 'blue';
+    } else if (genre == 'Adventure') {
+      return 'orangered';
+    } else if (genre == 'Family') {
+      return 'goldenrod';
+    } else if (genre == 'Animation') {
+      return 'lightgreen';
+    } else if (genre == 'Comedy') {
+      return 'pink';
+    } else if (genre == 'Biography') {
+      return 'brown';
+    }
+
+  }
+
+      function onMouseOver(d) {
+    tooltip.transition().duration(200).style('visibility', 'visible');
+    tooltip
+      .html(
+        d.year +
+          '-' +
+          months[d.month - 1] +
+          '<br>' +
+          baseTemp +
+          '<br>' +
+          d.variance
+      )
+      .style('left', d3.event.pageX + 'px')
+      .style('top', d3.event.pageY - 28 + 'px')
+
+  }
+
+  function onMouseLeave() {
+    tooltip.transition().duration(200).style('visibility', 'hidden');
+  }
+
 }
 
 drawTree();
