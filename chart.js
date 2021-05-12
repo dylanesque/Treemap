@@ -17,6 +17,9 @@ async function drawTree() {
       return node2.value - node1.value;
     });
 
+  const createTree = d3.treemap().size([1000, 600]).padding(1);
+  createTree(movieHierarchy);
+
   const movies = movieHierarchy.leaves();
   console.log(movies);
 
@@ -54,18 +57,33 @@ async function drawTree() {
       `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`
     );
 
+  // 4. Draw Chart
+
   const tree = bounds
     .selectAll('g')
     .data(movies)
     .enter()
     .append('g')
+    .attr('transform', (movie) => {
+      return 'translate(' + movie.x0 + ', ' + movie.y0 + ')';
+    })
     .append('rect')
     .attr('class', 'tile')
     .attr('fill', (movie) => mapGenreToColor(movie))
     .attr('data-name', (movie) => movie.data.name)
     .attr('data-category', (movie) => movie.data.category)
-    .attr('data-value', (movie) => movie.data.value);
-  
+    .attr('data-value', (movie) => movie.data.value)
+    .attr('width', (movie) => movie.x1 - movie.x0)
+    .attr('height', (movie) => movie.y1 - movie.y0);
+
+tree
+    .append('text')
+    .text((movie) => {
+      return movie.data.name;
+    })
+    .attr('x', 6)
+    .attr('y', 18);
+
   function mapGenreToColor(movie) {
     const genre = movie.data.category;
     if (genre == 'Action') {
@@ -83,10 +101,9 @@ async function drawTree() {
     } else if (genre == 'Biography') {
       return 'brown';
     }
-
   }
 
-      function onMouseOver(d) {
+  function onMouseOver(d) {
     tooltip.transition().duration(200).style('visibility', 'visible');
     tooltip
       .html(
@@ -99,14 +116,12 @@ async function drawTree() {
           d.variance
       )
       .style('left', d3.event.pageX + 'px')
-      .style('top', d3.event.pageY - 28 + 'px')
-
+      .style('top', d3.event.pageY - 28 + 'px');
   }
 
   function onMouseLeave() {
     tooltip.transition().duration(200).style('visibility', 'hidden');
   }
-
 }
 
 drawTree();
