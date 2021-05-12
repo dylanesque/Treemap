@@ -17,53 +17,20 @@ async function drawTree() {
       return node2.value - node1.value;
     });
 
-  const createTree = d3.treemap().size([1000, 600]).padding(1);
-  createTree(movieHierarchy);
+  const createTree = d3.treemap().size([1000, 600]).padding(1)(movieHierarchy);
 
   const movies = movieHierarchy.leaves();
   console.log(movies);
 
-  // 2. Create chart dimensions
-
-  const width = window.innerWidth * 0.85;
-  let dimensions = {
-    width,
-    height: width * 0.4,
-    margin: {
-      top: 5,
-      right: 10,
-      bottom: 50,
-      left: 60,
-    },
-  };
-
-  dimensions.boundedWidth =
-    dimensions.width - dimensions.margin.left - dimensions.margin.right;
-
-  dimensions.boundedHeight =
-    dimensions.height - dimensions.margin.top - dimensions.margin.bottom;
-
-  // 3. Draw canvas
-  const wrapper = d3
-    .select('#wrapper')
-    .append('svg')
-    .attr('width', dimensions.width)
-    .attr('height', dimensions.height);
-
-  const bounds = wrapper
-    .append('g')
-    .style(
-      'transform',
-      `translate(${dimensions.margin.left}px, ${dimensions.margin.top}px)`
-    );
-
   // 4. Draw Chart
 
-  const tree = bounds
+  const tree = d3
+    .select('#canvas')
     .selectAll('g')
     .data(movies)
     .enter()
     .append('g')
+    .attr('class', 'tile-group')
     .attr('transform', (movie) => {
       return 'translate(' + movie.x0 + ', ' + movie.y0 + ')';
     })
@@ -74,24 +41,31 @@ async function drawTree() {
     .attr('data-category', (movie) => movie.data.category)
     .attr('data-value', (movie) => movie.data.value)
     .attr('width', (movie) => movie.x1 - movie.x0)
-    .attr('height', (movie) => movie.y1 - movie.y0);
+    .attr('height', (movie) => movie.y1 - movie.y0)
+    .on('mouseover', onMouseOver)
+    .on('mouseleave', onMouseLeave);;
 
-tree
+  d3.selectAll('.tile-group')
     .append('text')
     .text((movie) => {
       return movie.data.name;
     })
-    .attr('x', 6)
-    .attr('y', 18);
+    .attr('x', 2)
+    .attr('y', 18)
+    .style('font-size', '11');
+
+  function stackText() {
+    // placeholder for text transforming function
+  }
 
   function mapGenreToColor(movie) {
     const genre = movie.data.category;
     if (genre == 'Action') {
-      return 'red';
+      return '#BED2FF';
     } else if (genre == 'Drama') {
-      return 'blue';
+      return 'lightblue';
     } else if (genre == 'Adventure') {
-      return 'orangered';
+      return 'orange';
     } else if (genre == 'Family') {
       return 'goldenrod';
     } else if (genre == 'Animation') {
@@ -99,24 +73,23 @@ tree
     } else if (genre == 'Comedy') {
       return 'pink';
     } else if (genre == 'Biography') {
-      return 'brown';
+      return 'tan';
     }
   }
 
-  function onMouseOver(d) {
+    const tooltip = d3
+      .select('body')
+      .append('div')
+      .attr('id', 'tooltip')
+      .style('visibility', 'hidden');
+
+  function onMouseOver(movie) {
     tooltip.transition().duration(200).style('visibility', 'visible');
     tooltip
-      .html(
-        d.year +
-          '-' +
-          months[d.month - 1] +
-          '<br>' +
-          baseTemp +
-          '<br>' +
-          d.variance
-      )
+      .html('Name: ' + movie.data.name + '<br>' + 'Gross: ' + movie.data.value)
       .style('left', d3.event.pageX + 'px')
-      .style('top', d3.event.pageY - 28 + 'px');
+      .style('top', d3.event.pageY - 28 + 'px')
+      .attr('data-value', movie.data.value);
   }
 
   function onMouseLeave() {
